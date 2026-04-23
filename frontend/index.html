@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pedal to the Metal — Dispatch Board</title>
+<style>
+  :root {
+    --cyan: #00f5ff;
+    --orange: #ff6b00;
+    --yellow: #ffe600;
+    --green: #39ff14;
+    --red: #ff073a;
+    --bg: #080c10;
+    --panel: #0d1520;
+    --border: #1a2d40;
+    --dim: #7a9ab8;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Courier New', monospace; background: var(--bg); color: #e8f4fd; }
+  header {
+    background: var(--panel);
+    border-bottom: 1px solid var(--cyan);
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo { color: var(--cyan); font-weight: 900; font-size: 1rem; letter-spacing: 0.15em; text-transform: uppercase; }
+  .logo span { color: var(--orange); }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); display: inline-block; box-shadow: 0 0 6px var(--green); margin-right: 0.4rem; }
+  .status-bar { font-size: 0.72rem; color: var(--dim); display: flex; align-items: center; gap: 1.5rem; }
+
+  main { display: grid; grid-template-columns: 320px 1fr; gap: 0; min-height: calc(100vh - 50px); }
+
+  /* Sidebar */
+  .sidebar {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    padding: 1rem;
+    overflow-y: auto;
+  }
+  .sidebar-title {
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .driver-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 0.6rem 0.75rem;
+    margin-bottom: 0.4rem;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .driver-card:hover { border-color: var(--cyan); }
+  .driver-card.unavailable { opacity: 0.45; }
+  .driver-card.burnout { border-color: var(--red); }
+  .driver-name { font-size: 0.85rem; font-weight: 700; }
+  .driver-meta { font-size: 0.68rem; color: var(--dim); margin-top: 0.15rem; }
+  .driver-badge {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.4rem;
+    border: 1px solid var(--green);
+    color: var(--green);
+    border-radius: 1px;
+    letter-spacing: 0.08em;
+  }
+  .driver-badge.off { border-color: var(--dim); color: var(--dim); }
+  .driver-badge.burnout { border-color: var(--red); color: var(--red); }
+  .load-count {
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: var(--cyan);
+    text-shadow: 0 0 6px var(--cyan);
+  }
+
+  /* Main board */
+  .board { padding: 1.25rem; overflow-y: auto; }
+  .board-row { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .stat-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 0.85rem 1.25rem;
+    flex: 1 1 140px;
+  }
+  .stat-val { font-size: 2rem; font-weight: 900; color: var(--cyan); text-shadow: 0 0 8px var(--cyan); }
+  .stat-lbl { font-size: 0.65rem; color: var(--dim); text-transform: uppercase; letter-spacing: 0.12em; margin-top: 0.2rem; }
+
+  .panel-title {
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 0.75rem;
+  }
+
+  /* Dispatch form */
+  .dispatch-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .form-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+  select, input[type=text] {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: #e8f4fd;
+    padding: 0.55rem 0.75rem;
+    font-family: inherit;
+    font-size: 0.82rem;
+    flex: 1 1 160px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  select:focus, input:focus { border-color: var(--cyan); }
+  .btn {
+    background: var(--cyan);
+    color: var(--bg);
+    border: none;
+    padding: 0.55rem 1.25rem;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn:hover { background: #fff; box-shadow: 0 0 12px var(--cyan); }
+  .btn-orange { background: var(--orange); }
+  .btn-orange:hover { background: #ff9a40; box-shadow: 0 0 12px var(--orange); }
+  .btn-red { background: var(--red); color: #fff; }
+  .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.7rem; }
+
+  /* Load table */
+  .load-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+  .load-table th {
+    text-align: left;
+    padding: 0.5rem 0.6rem;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--dim);
+    border-bottom: 1px solid var(--border);
+  }
+  .load-table td { padding: 0.5rem 0.6rem; border-bottom: 1px solid rgba(26,45,64,0.5); }
+  .load-table tr:hover td { background: rgba(0,245,255,0.03); }
+
+  .badge {
+    display: inline-block;
+    font-size: 0.6rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 1px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .badge-pending { border: 1px solid var(--dim); color: var(--dim); }
+  .badge-assigned { border: 1px solid var(--cyan); color: var(--cyan); }
+  .badge-transit { border: 1px solid var(--yellow); color: var(--yellow); }
+  .badge-delivered { border: 1px solid var(--green); color: var(--green); }
+  .badge-pod { background: var(--green); color: var(--bg); }
+  .badge-zone { border: 1px solid var(--cyan); color: var(--cyan); }
+  .badge-scrap { border: 1px solid var(--orange); color: var(--orange); }
+  .badge-bridgeport { border: 1px solid #b44fff; color: #b44fff; }
+  .badge-burnout { background: var(--red); color: #fff; font-size: 0.55rem; }
+
+  /* Fairness bar */
+  .fairness-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem; font-size: 0.78rem; }
+  .fairness-name { width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fairness-bar-track { flex: 1; height: 8px; background: var(--border); border-radius: 1px; }
+  .fairness-bar-fill { height: 100%; background: var(--cyan); border-radius: 1px; transition: width 0.4s; }
+  .fairness-bar-fill.high { background: var(--red); }
+  .fairness-num { width: 24px; text-align: right; color: var(--cyan); font-weight: 700; }
+
+  /* Toast */
+  #toast {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    background: var(--panel);
+    border: 1px solid var(--green);
+    color: var(--green);
+    padding: 0.75rem 1.25rem;
+    font-size: 0.8rem;
+    display: none;
+    z-index: 999;
+    box-shadow: 0 0 16px rgba(57,255,20,0.2);
+  }
+  #toast.error { border-color: var(--red); color: var(--red); }
+
+  @media (max-width: 700px) {
+    main { grid-template-columns: 1fr; }
+    .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">⚡ Pedal <span>to the</span> Metal</div>
+  <div class="status-bar">
+    <span><span class="status-dot"></span> Live</span>
+    <span id="clock">--:--:--</span>
+    <span id="fleet-status">Loading...</span>
+  </div>
+</header>
+
+<main>
+  <!-- SIDEBAR: Driver roster -->
+  <aside class="sidebar">
+    <div class="sidebar-title">// Driver Roster</div>
+    <div id="driver-list">Loading...</div>
+  </aside>
+
+  <!-- BOARD -->
+  <div class="board">
+    <!-- Stats row -->
+    <div class="board-row" id="stats-row">
+      <div class="stat-card"><div class="stat-val" id="stat-loads-today">—</div><div class="stat-lbl">Loads Today</div></div>
+      <div class="stat-card"><div class="stat-val" id="stat-available">—</div><div class="stat-lbl">Available Drivers</div></div>
+      <div class="stat-card"><div class="stat-val" id="stat-pods">—</div><div class="stat-lbl">PODs Confirmed</div></div>
+      <div class="stat-card"><div class="stat-val" id="stat-burnout">—</div><div class="stat-lbl">Burnout Flags</div></div>
+    </div>
+
+    <!-- Dispatch form -->
+    <div class="dispatch-panel">
+      <div class="panel-title">// Assign New Load</div>
+      <div class="form-row">
+        <select id="load-type">
+          <option value="zone">Zone Run</option>
+          <option value="bridgeport">Bridgeport Haul</option>
+          <option value="scrap">Scrap Run</option>
+        </select>
+        <input type="text" id="load-zone" placeholder="Zone (e.g. North, South...)" />
+        <input type="text" id="load-dest" placeholder="Destination (optional)" />
+      </div>
+      <div class="form-row">
+        <select id="override-driver">
+          <option value="">Auto-assign (Fairness Engine)</option>
+        </select>
+        <input type="text" id="override-reason" placeholder="Override reason (if manually assigning)" />
+        <button class="btn" onclick="assignLoad()">Dispatch ⚡</button>
+        <button class="btn btn-orange btn-sm" onclick="resetDay()">Reset Day</button>
+      </div>
+    </div>
+
+    <!-- Fairness panel -->
+    <div class="dispatch-panel" style="margin-bottom:1rem;">
+      <div class="panel-title">// Fairness Engine — Load Distribution</div>
+      <div id="fairness-chart">Loading...</div>
+    </div>
+
+    <!-- Load board -->
+    <div class="dispatch-panel">
+      <div class="panel-title">// Active Load Board</div>
+      <table class="load-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Type</th><th>Driver</th><th>Zone</th><th>Destination</th><th>Status</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="load-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+const API = window.location.origin.replace(/:\d+$/, ':8000');
+
+function showToast(msg, err = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = err ? 'error' : '';
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
+}
+
+// Clock
+setInterval(() => {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString();
+}, 1000);
+
+async function api(path, method = 'GET', body = null) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + path, opts);
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+function statusBadge(s) {
+  const map = { pending: 'badge-pending', assigned: 'badge-assigned', in_transit: 'badge-transit', delivered: 'badge-delivered', pod_confirmed: 'badge-pod' };
+  return `<span class="badge ${map[s] || ''}">${s.replace('_', ' ')}</span>`;
+}
+
+function typeBadge(t) {
+  const map = { zone: 'badge-zone', scrap: 'badge-scrap', bridgeport: 'badge-bridgeport' };
+  return `<span class="badge ${map[t] || ''}">${t}</span>`;
+}
+
+async function loadDrivers() {
+  const [drivers, fairness] = await Promise.all([api('/api/drivers/'), api('/api/dispatch/fairness')]);
+  const overrideEl = document.getElementById('override-driver');
+  overrideEl.innerHTML = '<option value="">Auto-assign (Fairness Engine)</option>';
+  const listEl = document.getElementById('driver-list');
+  listEl.innerHTML = '';
+
+  drivers.forEach(d => {
+    const fr = fairness.drivers.find(f => f.id === d.id) || {};
+    const burnout = fr.burnout_flag;
+    const cls = !d.available ? 'unavailable' : burnout ? 'burnout' : '';
+    listEl.innerHTML += `
+      <div class="driver-card ${cls}">
+        <div>
+          <div class="driver-name">${d.name}</div>
+          <div class="driver-meta">
+            Zone: ${fr.last_zone || '—'} &nbsp;|&nbsp;
+            Scrap: ${fr.scrap_runs_today || 0} &nbsp;|&nbsp;
+            BP: ${fr.bridgeport_runs_today || 0}
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div class="load-count">${d.loads_today}</div>
+          <div class="${burnout ? 'driver-badge burnout' : d.available ? 'driver-badge' : 'driver-badge off'}">${burnout ? '🔥 BURNOUT' : d.available ? 'AVAIL' : 'OFF'}</div>
+        </div>
+      </div>`;
+    if (d.available) {
+      const opt = document.createElement('option');
+      opt.value = d.id;
+      opt.textContent = `${d.name} (${d.loads_today} loads)`;
+      overrideEl.appendChild(opt);
+    }
+  });
+
+  document.getElementById('fleet-status').textContent = `${fairness.available_drivers}/${fairness.total_drivers} drivers available`;
+  document.getElementById('stat-available').textContent = fairness.available_drivers;
+  document.getElementById('stat-burnout').textContent = fairness.burnout_flags;
+}
+
+async function loadFairness() {
+  const fairness = await api('/api/dispatch/fairness');
+  const max = Math.max(...fairness.drivers.map(d => d.loads_today), 1);
+  const chartEl = document.getElementById('fairness-chart');
+  chartEl.innerHTML = fairness.drivers
+    .sort((a, b) => b.loads_today - a.loads_today)
+    .map(d => `
+      <div class="fairness-row">
+        <span class="fairness-name" title="${d.name}">${d.name}</span>
+        <div class="fairness-bar-track">
+          <div class="fairness-bar-fill ${d.burnout_flag ? 'high' : ''}" style="width:${(d.loads_today / max) * 100}%"></div>
+        </div>
+        <span class="fairness-num">${d.loads_today}</span>
+        ${d.burnout_flag ? '<span class="badge badge-burnout">BURNOUT</span>' : ''}
+      </div>`).join('');
+}
+
+async function loadLoads() {
+  const loads = await api('/api/loads/');
+  const tbody = document.getElementById('load-tbody');
+  const pods = loads.filter(l => l.pod_confirmed).length;
+  document.getElementById('stat-loads-today').textContent = loads.length;
+  document.getElementById('stat-pods').textContent = pods;
+
+  tbody.innerHTML = loads.length === 0
+    ? '<tr><td colspan="7" style="color:var(--dim);text-align:center;padding:1.5rem">No loads dispatched yet</td></tr>'
+    : loads.map(l => `
+      <tr>
+        <td style="color:var(--dim)">#${l.id}</td>
+        <td>${typeBadge(l.load_type)}</td>
+        <td>${l.driver_name || '—'}</td>
+        <td>${l.zone || '—'}</td>
+        <td>${l.destination || '—'}</td>
+        <td>${statusBadge(l.status)}</td>
+        <td style="display:flex;gap:0.4rem;flex-wrap:wrap">
+          ${l.status !== 'pod_confirmed' ? `<button class="btn btn-sm" onclick="confirmPOD(${l.id})">POD ✓</button>` : ''}
+          <button class="btn btn-sm" onclick="updateStatus(${l.id},'in_transit')">Transit</button>
+          <button class="btn btn-sm" onclick="updateStatus(${l.id},'delivered')">Delivered</button>
+        </td>
+      </tr>`).join('');
+}
+
+async function assignLoad() {
+  const type = document.getElementById('load-type').value;
+  const zone = document.getElementById('load-zone').value || null;
+  const dest = document.getElementById('load-dest').value || null;
+  const overrideId = document.getElementById('override-driver').value || null;
+  const reason = document.getElementById('override-reason').value || null;
+
+  let url = '/api/dispatch/assign';
+  if (overrideId) url += `?override_driver_id=${overrideId}`;
+
+  try {
+    const res = await api(url, 'POST', { load_type: type, zone, destination: dest, override_reason: reason });
+    showToast(`✓ Load #${res.load.id} assigned to ${res.assigned_to}${res.burnout_flag ? ' ⚠ BURNOUT FLAG' : ''}`);
+    refresh();
+  } catch (e) {
+    showToast('Error: ' + e.message, true);
+  }
+}
+
+async function confirmPOD(loadId) {
+  try {
+    await api(`/api/loads/${loadId}/pod`, 'POST');
+    showToast(`✓ POD confirmed for Load #${loadId}`);
+    refresh();
+  } catch (e) {
+    showToast('Error: ' + e.message, true);
+  }
+}
+
+async function updateStatus(loadId, status) {
+  try {
+    await api(`/api/loads/${loadId}`, 'PATCH', { status });
+    refresh();
+  } catch (e) {
+    showToast('Error: ' + e.message, true);
+  }
+}
+
+async function resetDay() {
+  if (!confirm('Reset all daily counters for all drivers?')) return;
+  try {
+    const r = await api('/api/dispatch/reset-day', 'POST');
+    showToast(`✓ Day reset — ${r.drivers_reset} drivers cleared`);
+    refresh();
+  } catch (e) {
+    showToast('Error: ' + e.message, true);
+  }
+}
+
+async function refresh() {
+  await Promise.all([loadDrivers(), loadLoads(), loadFairness()]);
+}
+
+refresh();
+setInterval(refresh, 15000);
+</script>
+</body>
+</html>
