@@ -1,0 +1,19 @@
+{
+  "work": [
+    "Verify morning concrete loads",
+    "Check plant demand issues",
+    "Resolve driver delays"
+  ],
+  "home": [
+    "Check son's health update",
+    "Review bills due",
+    "Talk with wife"
+  ],
+  "alerts": [
+    "Utility bill due tomorrow",
+    "Driver late on first load",
+    "Upcoming appointment"
+  ],
+  "chaos": 6
+}
+``
