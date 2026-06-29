@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<div class="panel">
+  <h2>🔴 TODAY</h2>
+
+  <div id="workSection">
+    <h3>🏗 Work Priorities</h3>
+    <ul id="workList"></ul>
+  </div>
+
+  <div id="homeSection">
+    <h3>🏠 Home Priorities</h3>
+    <ul id="homeList"></ul>
+  </div>
+
+  <div>
+    <h3>⚠️ Alerts</h3>
+    <ul id="alertsList"></ul>
+  </div>
+
+  <div>
+    <h3>🔥 Chaos Score</h3>
+    <p id="chaosScore"></p>
+  </div>
+</div>
+
+<script src="../core/today-engine.js"></script>
+
+<script>
+let currentMode = "overview";
+
+window.addEventListener("message", (event) => {
+  currentMode = event.data.mode;
+  updateView();
+});
+
+function updateView() {
+  document.getElementById("workSection").style.display =
+    currentMode === "home" ? "none" : "block";
+
+  document.getElementById("homeSection").style.display =
+    currentMode === "work" ? "none" : "block";
+}
+</script>
+
+</body>
+</html>
