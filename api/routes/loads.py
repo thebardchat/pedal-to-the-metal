@@ -16,6 +16,23 @@ def list_loads(status: Optional[str] = None, driver_id: Optional[int] = None):
     return loads
 
 
+@router.get("/report/daily")
+def daily_report():
+    loads = list(db.loads.values())
+    report = {}
+    for driver in db.drivers.values():
+        driver_loads = [l for l in loads if l.driver_id == driver.id]
+        report[driver.name] = {
+            "total": len(driver_loads),
+            "delivered": len([l for l in driver_loads if l.status in [LoadStatus.DELIVERED, LoadStatus.POD_CONFIRMED]]),
+            "pod_confirmed": len([l for l in driver_loads if l.pod_confirmed]),
+            "scrap_runs": driver.scrap_runs_today,
+            "bridgeport_runs": driver.bridgeport_runs_today,
+            "burnout_flag": driver.burnout_flag,
+        }
+    return {"date": "today", "drivers": report, "total_loads": len(loads)}
+
+
 @router.get("/{load_id}", response_model=Load)
 def get_load(load_id: int):
     if load_id not in db.loads:
@@ -51,20 +68,3 @@ def confirm_pod(load_id: int):
     load.pod_at = datetime.now(timezone.utc)
     load.status = LoadStatus.POD_CONFIRMED
     return {"status": "POD confirmed", "load_id": load_id}
-
-
-@router.get("/report/daily")
-def daily_report():
-    loads = list(db.loads.values())
-    report = {}
-    for driver in db.drivers.values():
-        driver_loads = [l for l in loads if l.driver_id == driver.id]
-        report[driver.name] = {
-            "total": len(driver_loads),
-            "delivered": len([l for l in driver_loads if l.status in [LoadStatus.DELIVERED, LoadStatus.POD_CONFIRMED]]),
-            "pod_confirmed": len([l for l in driver_loads if l.pod_confirmed]),
-            "scrap_runs": driver.scrap_runs_today,
-            "bridgeport_runs": driver.bridgeport_runs_today,
-            "burnout_flag": driver.burnout_flag,
-        }
-    return {"date": "today", "drivers": report, "total_loads": len(loads)}
