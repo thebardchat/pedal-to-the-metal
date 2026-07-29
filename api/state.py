@@ -3,8 +3,9 @@
 from api.models.driver import Driver
 
 ROSTER = [
-    "Marcus", "Brittany", "Eboni", "Deletra", "Stacey", "Alexis",
-    "Kenny", "Charlie", "Jamie", "Bryant", "Jonathon", "Jimmy", "Eddie", "Roberto",
+    "Driver 01", "Driver 02", "Driver 03", "Driver 04", "Driver 05", "Driver 06",
+    "Driver 07", "Driver 08", "Driver 09", "Driver 10", "Driver 11", "Driver 12",
+    "Driver 13", "Driver 14",
 ]
 
 

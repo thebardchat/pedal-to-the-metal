@@ -1,18 +1,13 @@
 {
   "work": [
-    "Verify morning concrete loads",
-    "Check plant demand issues",
-    "Resolve driver delays"
+    "Review sample dispatch board",
+    "Check demo plant demand issues",
+    "Resolve sample driver delay"
   ],
-  "home": [
-    "Check son's health update",
-    "Review bills due",
-    "Talk with wife"
-  ],
+  "home": [],
   "alerts": [
-    "Utility bill due tomorrow",
-    "Driver late on first load",
-    "Upcoming appointment"
+    "Demo alert: confirm first-round coverage",
+    "Demo alert: review will-call queue"
   ],
-  "chaos": 6
+  "chaos": 3
 }
