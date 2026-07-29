@@ -1,0 +1,37 @@
+# Python / local runtime
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+
+# SRM/private dispatch data - keep out of this public prototype
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+*.tsv
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.heic
+*.webp
+*roster*
+*schedule*
+*dispatch*
+*driver*
+*customer*
+*contacts*
+*phone*
+*pod*
+*ticket*
+*order*
+*invoice*
+*statement*
+*timesheet*
+
+# Keep intentionally tracked public demo JSON/code files explicit in git
+!data/today.json
